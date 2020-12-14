@@ -4,11 +4,11 @@ import java.util.ArrayList;
 public class CPT {
 
 	private String [][] CPT_values;
-	private char CPTnode;
+	private String CPTnode;
 
 	//Getters 
 
-	public char getCPTnode() {
+	public String getCPTnode() {
 		return CPTnode;
 	}
 
@@ -23,7 +23,7 @@ public class CPT {
 	@description: A constructor that build the CPT.
 	**/
 	
-	public CPT(char name, String[] values, ArrayList<Nodes.Node> parents, String cpt) {
+	public CPT(String name, String[] values, ArrayList<Nodes.Node> parents, String cpt) {
 		this.CPTnode = name;
 		if(parents == null) {
 			this.CPT_values = new String[2][values.length];

@@ -61,7 +61,7 @@ public class Factors {
 			this.name += node.getName();
 
 			if (node.getParents() == null) {
-				if(!node.getTag().equals("not_null") && node.getName() != query_node.getName()) {
+				if(!node.getTag().equals("not_null") && !node.getName().equals(query_node.getName())) {
 					System.out.println("node.getName() "+node.getName());
 
 
@@ -79,6 +79,7 @@ public class Factors {
 					}
 				}
 				else { //if(node.getTag().equals("not_null")
+
 
 					int rows = node.getValues().length + 1; //for Node name
 					int cols = 2;
@@ -98,8 +99,10 @@ public class Factors {
 				}
 			}
 			else {//(node.getParents() != null)
-				if(!node.getTag().equals("not_null") && node.getName() != query_node.getName()) {
-					System.out.println("nodeeee: "+node.getName());
+				
+				if(!node.getTag().equals("not_null") && !node.getName().equals(query_node.getName())) {
+					System.out.println("nodeeeeaaa: "+node.getName());
+
 
 					int rows = node.getCpt().getCPT_values().length;
 					int cols = node.getCpt().getCPT_values()[0].length - (node.getValues().length-1);
@@ -122,6 +125,7 @@ public class Factors {
 				check_parents(factor_values, query_node); 
 				}
 				else {//node.getTag().equals("not_null") 
+					System.out.println("nodeeeebbbbb: "+node.getName() +", "+node.getTag());
 
 
 					int rows = node.getCpt().getCPT_values().length*node.getValues().length - node.getValues().length + 1;
@@ -171,8 +175,8 @@ public class Factors {
 		private void check_parents(String[][] factor_valuess, Nodes.Node query_node) {
 			int check = 0;
 			for (int i = 0; i < factor_valuess[0].length - 1; i++) {
-				Nodes.Node n = Nodes.convert(factor_valuess[0][i].charAt(0));
-				if(!n.getTag().equals("not_null") && n.getName() != query_node.getName()) {
+				Nodes.Node n = Nodes.convert(factor_valuess[0][i]);
+				if(!n.getTag().equals("not_null") && !n.getName().equals(query_node.getName())) {
 
 					int row = ((factor_valuess.length - 1)/n.getValues().length) + 1;
 					int col = factor_valuess[0].length - 1;
@@ -180,7 +184,7 @@ public class Factors {
 
 					int bad_var = 0;
 					for (int j = 0; j < factor_valuess[0].length - 1; j++) {
-						if(factor_valuess[0][j].charAt(0) == n.getName())
+						if(factor_valuess[0][j].equals(n.getName()))
 							bad_var = j;
 					}
 					//Title

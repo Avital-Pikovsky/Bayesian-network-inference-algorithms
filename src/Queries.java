@@ -28,7 +28,6 @@ public class Queries {
 
 				VariableElimination ve = new VariableElimination(line, nodes, num);
 				answer.add(String.format("%.5f", ve.getAnswer())+","+ve.getSum()+","+ve.getMul());
-
 			}
 		}
 		

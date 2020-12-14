@@ -33,11 +33,11 @@ public class AnsweringQueries {
 
 		Vector<Nodes.Node> vars = nodes.getNodes();
 		for (int i = 0; i < vars.size(); i++) {
-			if(vars.get(i).getName() == element[0].charAt(0))
+			if(vars.get(i).getName().equals(element[0].substring(0, element[0].indexOf("="))))
 				query_var = vars.get(i);
 			for (int j = 0; j < element.length; j++) {
-				if(vars.get(i).getName() == element[j].charAt(0)) {
-					vars.get(i).setTag(element[j].substring(2));
+				if(vars.get(i).getName().equals(element[j].substring(0, element[0].indexOf("=")))) {
+					vars.get(i).setTag(element[j].substring(element[j].indexOf("=") + 1));
 				}
 			}
 
@@ -53,11 +53,11 @@ public class AnsweringQueries {
 		Vector<Nodes.Node> normal = nodes.getNodes();
 		for (int i = 0; i < normal.size(); i++) {
 			for (int k = 0; k < element.length; k++) {
-				if(normal.get(i).getName() == element[k].charAt(0)) {
-					normal.get(i).setTag(element[k].substring(2));
+				if(normal.get(i).getName().equals(element[k].substring(0, element[k].indexOf("=")))) {
+					normal.get(i).setTag(element[k].substring(element[k].indexOf("=") + 1));
 				}
 			}
-			if(normal.get(i).getName() == element[0].charAt(0)) {
+			if(normal.get(i).getName().equals(element[0].substring(0, element[0].indexOf("=")))) {
 				for (int j = 0; j < normal.get(i).getValues().length; j++) {
 					if(!normal.get(i).getTag().equals(normal.get(i).getValues()[j])) {
 						normal.get(i).setTag(normal.get(i).getValues()[j]);

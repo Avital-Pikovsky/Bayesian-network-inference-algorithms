@@ -37,9 +37,9 @@ public class VariableElimination{
 
 		for (int i = 0; i < vars.size(); i++) {
 			for (int j = 0; j < element.length; j++) {
-				if(vars.get(i).getName() == element[0].charAt(0))
+				if(vars.get(i).getName().equals(element[0].substring(0, element[0].indexOf("="))))
 					query_node = vars.get(i);
-				if(vars.get(i).getName() == element[j].charAt(0)) {
+				if(vars.get(i).getName().equals(element[j].substring(0, element[0].indexOf("=")))) {
 					find_parents(vars.get(i));
 				}
 			}
@@ -56,9 +56,10 @@ public class VariableElimination{
 
 		for (int i = 0; i < vars.size(); i++) {
 			for (int j = 0; j < element.length; j++) {
-				if(vars.get(i).getName() == element[j].charAt(0)) {
+				if(vars.get(i).getName().equals(element[j].substring(0, element[j].indexOf("=")))) {
 
-					vars.get(i).setTag(element[j].substring(2));
+					vars.get(i).setTag(element[j].substring(element[j].indexOf("=") + 1));
+					System.out.println(vars.get(i).getName()+" "+(element[j].substring(element[j].indexOf("=") + 1)));
 				}
 			}
 			if(vars.get(i).getTag().equals("not_null")) {
@@ -255,7 +256,7 @@ public class VariableElimination{
 		together_list.addAll(together);
 
 		for (int i = 0; i < together_list.size(); i++) {
-			rows *= Nodes.convert(together_list.get(i).charAt(0)).getValues().length;
+			rows *= Nodes.convert(together_list.get(i)).getValues().length;
 		}			
 		return rows;
 	}
@@ -286,7 +287,7 @@ public class VariableElimination{
 		//new factor rows size
 		int rows = 1;
 		for (int i = 0; i < title.size(); i++) {
-			rows *= Nodes.convert(title_list.get(i).charAt(0)).getValues().length;
+			rows *= Nodes.convert(title_list.get(i)).getValues().length;
 		}
 		rows++;
 		int cols = title.size() + 1;
@@ -302,13 +303,13 @@ public class VariableElimination{
 
 		for (int j = 0; j < join_factor.getFactor_values()[0].length - 1; j++) {
 			int currRow = 1;
-			int values_num = Nodes.convert(join_factor.getFactor_values()[0][j].charAt(0)).getValues().length;
+			int values_num = Nodes.convert(join_factor.getFactor_values()[0][j]).getValues().length;
 			timess /= values_num;
 			int run = (join_factor.getFactor_values().length - 1)/(values_num*timess);
 			for (int r = 0; r < run; r++) {
 				for (int k = 0; k < values_num; k++) {
 					for (int t = 0; t < timess; t++) {
-						join_factor.getFactor_values()[currRow++][j] = Nodes.convert(join_factor.getFactor_values()[0][j].charAt(0)).getValues()[k];
+						join_factor.getFactor_values()[currRow++][j] = Nodes.convert(join_factor.getFactor_values()[0][j]).getValues()[k];
 
 					}
 				}
@@ -399,7 +400,7 @@ public class VariableElimination{
 
 		int col = 0;
 		for (int i = 0; i < factor.getFactor_values()[0].length - 1; i++) {
-			if(factor.getFactor_values()[0][i].charAt(0) == node.getName())
+			if(factor.getFactor_values()[0][i].equals(node.getName()))
 				col = i;
 		}
 		for (int i = 0; i < elimination_factor.getFactor_values()[0].length; i++) {
@@ -412,13 +413,13 @@ public class VariableElimination{
 
 		for (int j = 0; j < elimination_factor.getFactor_values()[0].length - 1; j++) {
 			int currRow = 1;
-			int values_num = Nodes.convert(elimination_factor.getFactor_values()[0][j].charAt(0)).getValues().length;
+			int values_num = Nodes.convert(elimination_factor.getFactor_values()[0][j]).getValues().length;
 			times /= values_num;
 			int run = (elimination_factor.getFactor_values().length - 1)/(values_num*times);
 			for (int r = 0; r < run; r++) {
 				for (int k = 0; k < values_num; k++) {
 					for (int t = 0; t < times; t++) {
-						elimination_factor.getFactor_values()[currRow++][j] = Nodes.convert(elimination_factor.getFactor_values()[0][j].charAt(0)).getValues()[k];
+						elimination_factor.getFactor_values()[currRow++][j] = Nodes.convert(elimination_factor.getFactor_values()[0][j]).getValues()[k];
 					}
 				}
 			}

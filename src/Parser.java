@@ -36,9 +36,9 @@ public class Parser {
 	@description: A function that write to output file the answer of the queries.
 	**/
     public static void output(Vector<String> ans)throws IOException {
-        File file = new File("output2.txt");
+        File file = new File("output.txt");
         file.createNewFile();
-        if (!file.canWrite()) throw new IOException("can not be write to");
+        if (!file.canWrite()) throw new IOException("Erorr- can't write to file");
         if (file.exists()) file.delete();
         FileWriter fileWriter = new FileWriter(file, true);
         for (int i = 0; i < ans.size(); i++)

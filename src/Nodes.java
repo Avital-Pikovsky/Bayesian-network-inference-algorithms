@@ -6,8 +6,6 @@ public class Nodes {
 	
 	private static Vector<Node> nodes = new Vector<Node>();
 	
-	//Getters and setters
-
 	public Vector<Node> getNodes() {
 		return nodes;
 	}
@@ -28,9 +26,9 @@ public class Nodes {
 	@output: the Node if exist, null if not.
 	**/
 	
-	public static Node convert(char par) {
+	public static Node convert(String par) {
 		for(int i = 0; i < nodes.size(); i++) {
-			if(nodes.get(i) != null && nodes.get(i).getName() == par)
+			if(nodes.get(i) != null && nodes.get(i).getName().equals(par))
 				return nodes.get(i);
 		}
 		return null;
@@ -38,7 +36,7 @@ public class Nodes {
 	
 	public class Node{
 		
-		private char name;
+		private String name;
 		private String[] values;
 		private String tag = "null";
 		private ArrayList<Node> parents;
@@ -46,10 +44,10 @@ public class Nodes {
 		
 		//Getters and setters
 		
-		public char getName() {
+		public String getName() {
 			return name;
 		}
-		public void setName(char name) {
+		public void setName(String name) {
 			this.name = name;
 		}
 		public String[] getValues() {
@@ -89,13 +87,13 @@ public class Nodes {
 			this.parents= new ArrayList<>();
 			String[] cpt = vars.split("CPT:\n");
 			String [] var = cpt[0].split("\n");
-			this.name = var[0].charAt(0); //Var X
+			this.name = var[0]; //Var X
 			this.values = var[1].substring(8).split(","); //Values: true, false
 
 			if(!var[2].substring(9).equals("none")){
 				String [] par = var[2].substring(9).split(",");//Parents: Y,Z,Q
 				for(int i = 0; i < par.length; i++) {
-					Node n = convert(par[i].charAt(0));
+					Node n = convert(par[i]);
 					parents.add(n);
 				}
 			}
