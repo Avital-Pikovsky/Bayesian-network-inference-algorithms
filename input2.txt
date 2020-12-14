@@ -1,0 +1,29 @@
+Network
+Variables: A,B,C
+
+Var A
+Values: true,false
+Parents: none
+CPT:
+=true,0.1
+
+Var B
+Values: set,noset,maybe
+Parents: none
+CPT:
+=set,0.2,=noset,0.5
+
+Var C
+Values: go,stay,run
+Parents: A,B
+CPT:
+true,set,=go,0.25,=stay,0.7
+true,noset,=go,0.2,=stay,0.6
+true,maybe,=go,0.3,=stay,0.2
+false,set,=go,0.55,=stay,0.15
+false,noset,=go,0.28,=stay,0.3
+false,maybe,=go,0.45,=stay,0.25
+
+Queries
+P(C=run|B=set,A=true),1
+
