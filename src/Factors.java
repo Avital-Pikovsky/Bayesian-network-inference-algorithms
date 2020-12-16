@@ -1,4 +1,5 @@
 
+import java.util.ArrayList;
 import java.util.Vector;
 public class Factors {
 
@@ -14,7 +15,7 @@ public class Factors {
 	@Constructor
 	@input: All the nodes and query node name.
 	@description: A Constructor that builds factors by nodes.
-	**/
+	 **/
 	public Factors(Vector<Nodes.Node> nodes, Nodes.Node query_node) {
 		for (int i = 0; i < nodes.size(); i++) {
 			Factor f = new Factor(nodes.get(i), query_node);
@@ -46,7 +47,7 @@ public class Factors {
 	 	@Constructor
 		@input: The new Factor name, number of rows and number of columns.
 		@description: A Constructor that build new factor.
-		**/
+		 **/
 		public Factor(String name, int rows, int cols) {
 			this.name = name;
 			this.factor_values = new String[rows][cols];
@@ -56,14 +57,12 @@ public class Factors {
 		@Constructor
 		@input: Node and query node.
 		@description: A Constructor that build new factor by Node's CPT.
-		**/
+		 **/
 		public Factor(Nodes.Node node, Nodes.Node query_node) {
 			this.name += node.getName();
 
 			if (node.getParents() == null) {
 				if(!node.getTag().equals("not_null") && !node.getName().equals(query_node.getName())) {
-					System.out.println("node.getName() "+node.getName());
-
 
 					int rows = 2; //for Node name
 					int cols = 2;
@@ -84,25 +83,20 @@ public class Factors {
 					int rows = node.getValues().length + 1; //for Node name
 					int cols = 2;
 					this.factor_values = new String[rows][cols];
-					System.out.println(node.getName());
-					System.out.println(rows);
 
 					for (int j = 0; j < factor_values[0].length; j++) {
 						for (int i = 0; i < factor_values.length-1; i++) {
 
 							factor_values[0][0] = String.valueOf(node.getName()); //Node name
 							factor_values[i+1][j] = node.getCpt().getCPT_values()[j][i];
-
-
 						}
 					}
 				}
 			}
 			else {//(node.getParents() != null)
-				
-				if(!node.getTag().equals("not_null") && !node.getName().equals(query_node.getName())) {
-					System.out.println("nodeeeeaaa: "+node.getName());
 
+				if(!node.getTag().equals("not_null") && !node.getName().equals(query_node.getName())) {
+					ArrayList<Nodes.Node> var_list = new ArrayList<>();
 
 					int rows = node.getCpt().getCPT_values().length;
 					int cols = node.getCpt().getCPT_values()[0].length - (node.getValues().length-1);
@@ -112,34 +106,39 @@ public class Factors {
 					for (int i = 0; i < rows; i++) {
 						for (j = 0; j < node.getParents().size(); j++) {
 							factor_values[i][j] = node.getCpt().getCPT_values()[i][j];
+
 						}
 						factor_values[0][j] = String.valueOf(node.getName());
-							
-						
+
 						for (int k = node.getParents().size(); k < node.getCpt().getCPT_values()[0].length; k++) {
 							if(node.getTag().equals(node.getCpt().getCPT_values()[0][k])){
 								factor_values[i][j] = node.getCpt().getCPT_values()[i][k];
 							}
 						}
 					}
-				check_parents(factor_values, query_node); 
+					for (int i = 0; i < factor_values[0].length-1; i++) {
+						var_list.add(Nodes.convert(factor_values[0][i]));
+					}
+				this.factor_values = check_parents(factor_values, query_node,var_list); 
 				}
 				else {//node.getTag().equals("not_null") 
-					System.out.println("nodeeeebbbbb: "+node.getName() +", "+node.getTag());
+					ArrayList<Nodes.Node> var_list = new ArrayList<>();
 
 
 					int rows = node.getCpt().getCPT_values().length*node.getValues().length - node.getValues().length + 1;
 					int cols = (node.getCpt().getCPT_values()[0].length - node.getValues().length) + 2;
-					System.out.println("rows: "+rows);
-					System.out.println("cols: "+cols);
 					this.factor_values = new String[rows][cols];
 
 
 					// Title
-					for(int i = 0; i < node.getParents().size(); i++)
+					for(int i = 0; i < node.getParents().size(); i++) {
 						factor_values[0][i] = String.valueOf(node.getParents().get(i).getName());
-					for(int i = node.getParents().size(); i < cols-1; i++)
+						var_list.add(node.getParents().get(i));
+					}
+					for(int i = node.getParents().size(); i < cols-1; i++) {
 						factor_values[0][i] = String.valueOf(node.getName());
+						var_list.add(node);
+					}
 
 
 					// Body
@@ -164,57 +163,59 @@ public class Factors {
 
 						}
 					}
-					check_parents(factor_values, query_node);
+
+				this.factor_values = check_parents(this.factor_values, query_node,var_list);
 				}
 			}
 		}
 		/**
-		@input: The Factor's values and query node.
+		@param var_list 
+		 * @input: The Factor's values and query node.
 		@description: A function that delete evidence columns and rows.
-		**/
-		private void check_parents(String[][] factor_valuess, Nodes.Node query_node) {
-			int check = 0;
-			for (int i = 0; i < factor_valuess[0].length - 1; i++) {
-				Nodes.Node n = Nodes.convert(factor_valuess[0][i]);
+		 **/
+		private String[][] check_parents(String[][] factor_values, Nodes.Node query_node, ArrayList<Nodes.Node> var_list) {
+			for (Nodes.Node  n : var_list) {
+				
+//				Nodes.Node n = Nodes.convert(factor_valuess[0][i]);
+
+
 				if(!n.getTag().equals("not_null") && !n.getName().equals(query_node.getName())) {
 
-					int row = ((factor_valuess.length - 1)/n.getValues().length) + 1;
-					int col = factor_valuess[0].length - 1;
+					int row = ((factor_values.length - 1)/n.getValues().length) + 1;
+					int col = factor_values[0].length - 1;
 					String [][] f_values = new String[row][col];
 
 					int bad_var = 0;
-					for (int j = 0; j < factor_valuess[0].length - 1; j++) {
-						if(factor_valuess[0][j].equals(n.getName()))
+					for (int j = 0; j < factor_values[0].length - 1; j++) {
+						if(factor_values[0][j].equals(n.getName()))
 							bad_var = j;
 					}
 					//Title
-					for (int j = 0; j < factor_valuess[0].length-1; j++) {
-						while(j < bad_var)
-							f_values[0][j] = factor_valuess[0][j];
-						f_values[0][j] = factor_valuess[0][j+1];
-
+					for (int j = 0; j < f_values[0].length-1; j++) {
+						if(j < bad_var)
+							f_values[0][j] = factor_values[0][j];
+						else {
+							f_values[0][j] = factor_values[0][j+1];
+						}
 					}
 					//Body
 					int r = 0;
-					for (int j = 1; j < factor_valuess.length; j++) {
-						if(factor_valuess[j][bad_var].equals(n.getTag())) {
+					for (int j = 1; j < factor_values.length; j++) {
+						if(factor_values[j][bad_var].equals(n.getTag())) {
 							r++;
-							for (int j2 = 0; j2 < factor_valuess[0].length-1; j2++) {
+							for (int j2 = 0; j2 < factor_values[0].length-1; j2++) {
 								if(j2 < bad_var)
-									f_values[r][j2] = factor_valuess[j][j2];
-								else f_values[r][j2] = factor_valuess[j][j2+1];
+									f_values[r][j2] = factor_values[j][j2];
+								else f_values[r][j2] = factor_values[j][j2+1];
 							}
 						}
 					}
-					this.factor_values = f_values;
-					check_parents(factor_values, query_node);
+					factor_values = f_values;
 				}
-				return;
 			}
-			if(check == (factor_valuess[0].length - 1)) {
-				System.out.println("??????????");
-				return;
-			}
+			return factor_values;
+
+			
 		}
 	}
 

@@ -1,6 +1,4 @@
-import java.awt.desktop.QuitResponse;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Vector;
 
 public class AnsweringQueries {
@@ -36,47 +34,75 @@ public class AnsweringQueries {
 			if(vars.get(i).getName().equals(element[0].substring(0, element[0].indexOf("="))))
 				query_var = vars.get(i);
 			for (int j = 0; j < element.length; j++) {
-				if(vars.get(i).getName().equals(element[j].substring(0, element[0].indexOf("=")))) {
+				if(vars.get(i).getName().equals(element[j].substring(0, element[j].indexOf("=")))) {
 					vars.get(i).setTag(element[j].substring(element[j].indexOf("=") + 1));
 				}
 			}
-
-		}	
-		if(check_null(vars) == null) {
-			answer = find_wparents(query_var);
-			System.out.println("answer: "+answer);
 		}
-		else {
-		double answer1 = find_vars(vars);
-		sum--;
 
-		Vector<Nodes.Node> normal = nodes.getNodes();
-		for (int i = 0; i < normal.size(); i++) {
-			for (int k = 0; k < element.length; k++) {
-				if(normal.get(i).getName().equals(element[k].substring(0, element[k].indexOf("=")))) {
-					normal.get(i).setTag(element[k].substring(element[k].indexOf("=") + 1));
+		boolean check = auto_check(query_var, vars);
+		if(check) {
+			answer = find_wparents(query_var);
+		}
+
+		else { //flag false
+			double answer1 = find_vars(vars);
+			sum--;
+			String firstValue  = query_var.getTag();
+			Vector<Nodes.Node> normal = nodes.getNodes();
+			for (int i = 0; i < normal.size(); i++) {
+				for (int k = 0; k < element.length; k++) {
+					if(normal.get(i).getName().equals(element[k].substring(0, element[k].indexOf("=")))) {
+						normal.get(i).setTag(element[k].substring(element[k].indexOf("=") + 1));
+					}
 				}
-			}
-			if(normal.get(i).getName().equals(element[0].substring(0, element[0].indexOf("=")))) {
-				for (int j = 0; j < normal.get(i).getValues().length; j++) {
-					if(!normal.get(i).getTag().equals(normal.get(i).getValues()[j])) {
-						normal.get(i).setTag(normal.get(i).getValues()[j]);
-						answer2 += find_vars(normal);
-						sum--;
+				if(normal.get(i).getName().equals(element[0].substring(0, element[0].indexOf("=")))) {
+					for (int j = 0; j < normal.get(i).getValues().length; j++) {
+						//						if(!normal.get(i).getTag().equals(normal.get(i).getValues()[j])) {
+						if(!firstValue.equals(normal.get(i).getValues()[j])) {
+
+							normal.get(i).setTag(normal.get(i).getValues()[j]);
+							answer2 += find_vars(normal);
+							sum++;
+						}
 					}
 				}
 			}
-		}
-
-		DecimalFormat df = new DecimalFormat("#0.#####");
-		answer = Double.valueOf(df.format(answer1/(answer1 + answer2)));
-		sum++;
+			DecimalFormat df = new DecimalFormat("#0.#####");
+			answer = Double.valueOf(df.format(answer1/(answer1 + answer2)));
+			sum++;
 		}
 		for (int i = 0; i < vars.size(); i++) {
 			vars.get(i).setTag("null");
 		}
 	}
+	/**
+	@input: query variable and nodes vector.
+	@description: A function that checks if need an automatics check or not.
+	@output: True if needs automatics check and False if not.
+	**/
+	private boolean auto_check(Nodes.Node query_var, Vector<Nodes.Node> vars) {
 
+		if(query_var.getParents() == null) {
+			return false;
+		}
+		for (int i = 0; i < query_var.getParents().size(); i++) {
+			if(query_var.getParents().get(i).getTag().equals("null")) {
+				return false;
+			}
+
+		}
+		for (int i = 0; i < vars.size(); i++) {
+			if(vars.get(i).getParents() != null && !vars.get(i).getTag().equals("null")) {
+				for (int j = 0; j < vars.get(i).getParents().size(); j++) {
+					if(vars.get(i).getParents().get(j).getName().equals(query_var.getName()))
+						return false;
+				}
+			}
+		}
+
+		return true;
+	}
 	/**
 	@input: Nodes vector.
 	@description: A function that check the Node's tag and return null if there are no Nodes whose tag is null.
@@ -96,18 +122,18 @@ public class AnsweringQueries {
 
 	public double find_vars(Vector<Nodes.Node> vars) {
 		double ans = 0.0;
-
 		Nodes.Node n = check_null(vars);
 		if(n == null) {
-			sum++;
 			return calculation(vars);
 		}
 
 		for (int j = 0; j < n.getValues().length; j++) {
 			n.setTag(n.getValues()[j]);
 			ans += find_vars(vars);
+			sum++;
 			n.setTag("null");
 		}
+		sum--;
 		return ans;
 	}
 
@@ -117,7 +143,7 @@ public class AnsweringQueries {
 	 **/
 
 	public double calculation(Vector<Nodes.Node> vars) {
-		double ans = 1.0;
+		double ans = 1;
 		for (int i = 0; i < vars.size(); i++) {
 
 			if(vars.get(i).getParents() == null) {
@@ -145,7 +171,7 @@ public class AnsweringQueries {
 	@input: Node that has parents.
 	@description: A function that calculates the node's parents.
 	 **/
-	private double find_wparents(Nodes.Node node) {
+	static double find_wparents(Nodes.Node node) {
 		String [] parents = new String[node.getParents().size()];
 		for (int i = 0; i < node.getParents().size(); i++) {
 			parents[i] = node.getParents().get(i).getTag();

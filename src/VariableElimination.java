@@ -28,18 +28,17 @@ public class VariableElimination{
 	@Constructor
 	@input: The Query, nodes and number of algorithm (2 or 3).
 	@description: Building the factors, sort them and send them to the right functions.
-	**/
+	 **/
 	public VariableElimination(String query, Nodes nodes, char num) {
 
 		String [] element = query.split(",|\\|");
-
 		Vector<Nodes.Node> vars = nodes.getNodes();
 
 		for (int i = 0; i < vars.size(); i++) {
 			for (int j = 0; j < element.length; j++) {
 				if(vars.get(i).getName().equals(element[0].substring(0, element[0].indexOf("="))))
 					query_node = vars.get(i);
-				if(vars.get(i).getName().equals(element[j].substring(0, element[0].indexOf("=")))) {
+				if(vars.get(i).getName().equals(element[j].substring(0, element[j].indexOf("=")))) {
 					find_parents(vars.get(i));
 				}
 			}
@@ -47,11 +46,11 @@ public class VariableElimination{
 		Vector<Nodes.Node> removes = new Vector<>();
 
 		for (int i = 0; i < vars.size(); i++) {
-			if(vars.get(i).getTag().equals("null")) {
+			if(!vars.get(i).getTag().equals("not_null")) {
 				removes.add(vars.get(i));
-				vars.remove(i);
 			}
 		}
+		vars.removeAll(removes);
 		Vector<Nodes.Node> hidden_vector = new Vector<>();
 
 		for (int i = 0; i < vars.size(); i++) {
@@ -59,7 +58,6 @@ public class VariableElimination{
 				if(vars.get(i).getName().equals(element[j].substring(0, element[j].indexOf("=")))) {
 
 					vars.get(i).setTag(element[j].substring(element[j].indexOf("=") + 1));
-					System.out.println(vars.get(i).getName()+" "+(element[j].substring(element[j].indexOf("=") + 1)));
 				}
 			}
 			if(vars.get(i).getTag().equals("not_null")) {
@@ -70,6 +68,8 @@ public class VariableElimination{
 		//algorithm 2: sort by ABC.
 		if(num == '2') {
 			Collections.sort(hidden_vector, new SortNodesByABC());
+			for (int i = 0; i < hidden_vector.size(); i++) {
+			}
 		}
 
 		//algorithm 3: sort by number of rows.
@@ -77,25 +77,53 @@ public class VariableElimination{
 			Collections.sort(hidden_vector, new SortNodesBySize());
 		}
 		Factors f = new Factors(vars, query_node);
-		f.printFactors();
+//		f.printFactors();
 		if(hidden_vector.isEmpty()) {
-			for (int i = 1; i < f.getFactors().firstElement().getFactor_values().length; i++) {
-				if(f.getFactors().firstElement().getFactor_values()[i][0].equals(query_node.getTag())) {
-					answer = Double.valueOf(f.getFactors().firstElement().getFactor_values()[i][1]);
+			if(f.getFactors().size() == 1) {
+				for (int i = 1; i < f.getFactors().firstElement().getFactor_values().length; i++) {
+					if(f.getFactors().firstElement().getFactor_values()[i][0].equals(query_node.getTag())) {
+						answer = Double.valueOf(f.getFactors().firstElement().getFactor_values()[i][1]);
+					}
 				}
 			}
-		}
-		else {
-
-			for (int i = 0; i < hidden_vector.size(); i++) {
-				Factors.Factor new_factor = (pre_elimination(hidden(f, hidden_vector.get(i)), hidden_vector.get(i)));
-				f.getFactors().add(new_factor);
-			}
-
-			if(f.getFactors().size() > 1)
+			else {
 				answer = normalization(last_join(f));
-			else answer = normalization(f.getFactors().firstElement());
-			System.out.println("answerrrrrrrrrrrrrrrr: "+answer);
+			}
+		}
+		else {				
+			boolean flag = false;
+			if(query_node.getParents() != null) {
+				flag = true;
+				for (Nodes.Node parent : query_node.getParents()) {
+					if(parent.getTag().equals("not_null"))
+						flag = false;
+				}
+				for (Nodes.Node childs : vars) {
+					if(childs.getParents() != null) {
+						for (Nodes.Node parent_node  : childs.getParents()) {
+							if(parent_node.getName().equals(query_node.getName()))
+								flag = false;
+						}
+					}
+				}
+			}
+			if(flag) {
+				answer = AnsweringQueries.find_wparents(query_node);
+			}
+			else {
+				for (int i = 0; i < hidden_vector.size(); i++) {
+					Factors.Factor after_hidden = hidden(f, hidden_vector.get(i));
+					if(after_hidden.getFactor_values()[0].length > 2) {
+						Factors.Factor new_factor = (pre_elimination(after_hidden, hidden_vector.get(i)));
+						f.getFactors().add(new_factor);
+					}
+				}
+
+
+				if(f.getFactors().size() > 1)
+					answer = normalization(last_join(f));
+				else answer = normalization(f.getFactors().firstElement());
+			}
 		}
 		f.getFactors().removeAllElements();
 		//return the removes nodes
@@ -113,10 +141,9 @@ public class VariableElimination{
 	@input: Node.
 	@description: A function that find the ancestor query or evidence nodes
 	and tag them by 'not_null'.
-	**/
+	 **/
 	public void find_parents(Nodes.Node node) {
 		node.setTag("not_null");
-
 		if(node.getParents() != null) {
 			for (int j = 0; j < node.getParents().size(); j++) {
 				find_parents(node.getParents().get(j));
@@ -128,12 +155,8 @@ public class VariableElimination{
 	@description: A function that choose every time hidden Factor, send the Factors that the hidden Factor
 	existing in them to right functions to build new Factor from all this factors.
 	@output: new Factor.
-	**/
+	 **/
 	public Factors.Factor hidden(Factors f, Nodes.Node node) {
-		System.out.println("\nStart print factors");
-		f.printFactors();
-		System.out.println("\nFinish print factors\n");
-
 		Set<Factors.Factor> hidden_factors = new HashSet<Factors.Factor>();
 
 		for (int i = 0; i < f.getFactors().size(); i++) {
@@ -171,11 +194,9 @@ public class VariableElimination{
 	@description: A function that choose every time two Factors that the return Factor will be the smallest one 
 	(if there is more then one Factor - choose the Factors by smallest ASCII value of the return Factor's variables).
 	@output: new Factor.
-	**/
+	 **/
 	private Factors.Factor permutations(List<Factors.Factor> list_hidden) {
-		for (int i = 0; i < list_hidden.size(); i++) {
-			System.out.println("print all factors: " + i +" "+list_hidden.get(i).getName());
-		}
+
 		int min = Integer.MAX_VALUE;
 		Factors.Factor a = null, b = null;
 		for (int i = 0; i < list_hidden.size() - 1; i++) {
@@ -203,7 +224,7 @@ public class VariableElimination{
 	@input: 4 Factors.
 	@description: A function that choose two Factors by smallest ASCII value of the return Factor's variables).
 	@output: Chosen two Factors.
-	**/
+	 **/
 	public int ASCII_sum(Factors.Factor a1, Factors.Factor a2, Factors.Factor b1, Factors.Factor b2) {
 		int ascii1 = 0, ascii2 = 0;
 		for (int i = 0; i < a1.getFactor_values()[0].length; i++) {
@@ -234,7 +255,7 @@ public class VariableElimination{
 	@input: 2 Factors.
 	@description: A function that sum the variables of the two Factors and sum the rows number of each variable.
 	@output: Number of row.
-	**/
+	 **/
 	public int check_common(Factors.Factor a, Factors.Factor b) {
 		int rows = 1;
 		Set<String> together = new HashSet<String>();
@@ -264,7 +285,7 @@ public class VariableElimination{
 	@input: 2 Factors.
 	@description: A function that builds the new Factor before join the 2 old Factors and send them to join function.
 	@output: New Factor after join.
-	**/
+	 **/
 	public Factors.Factor pre_join(Factors.Factor a, Factors.Factor b) {
 		Set<String> title = new HashSet<String>();
 
@@ -330,22 +351,13 @@ public class VariableElimination{
 			double ans = join(a, b, search);
 			join_factor.getFactor_values()[i][join_factor.getFactor_values()[0].length-1] = String.valueOf(ans);
 		}
-		//print the new factor
-		System.out.println();
-		System.out.println(join_factor.getName());
-		for (int i = 0; i < join_factor.getFactor_values().length; i++) {
-			for (int j = 0; j < join_factor.getFactor_values()[0].length; j++) {
-				System.out.print(join_factor.getFactor_values()[i][j]+ " , ");
-			}
-			System.out.println();
-		}
 		return join_factor;
 	}
 	/**
 	@input: 2 Factors and HashMap.
 	@description: A function that builds the values column (for every row).
 	@output: value for each row.
-	**/
+	 **/
 	public double join(Factors.Factor a, Factors.Factor b, HashMap<String, String> search) {
 		HashMap<String, String> search_a = new HashMap<>();
 		HashMap<String, String> search_b = new HashMap<>();
@@ -388,9 +400,9 @@ public class VariableElimination{
 	}
 	/**
 	@input: Factor and Node.
-	@description: A function that builds the new Factor before eliminition the old Factor and send it to elimination function.
+	@description: A function that builds the new Factor before elimination the old Factor and send it to elimination function.
 	@output: New Factor after elimination.
-	**/
+	 **/
 	public Factors.Factor pre_elimination(Factors.Factor factor, Nodes.Node node) {
 
 		int rows = (factor.getFactor_values().length - 1)/(node.getValues().length) + 1;
@@ -436,22 +448,13 @@ public class VariableElimination{
 			elimination_factor.getFactor_values()[i][elimination_factor.getFactor_values()[0].length-1] = String.valueOf(ans);
 		}
 
-		//print the new factor
-		System.out.println();
-		System.out.println(elimination_factor.getName());
-		for (int i = 0; i < elimination_factor.getFactor_values().length; i++) {
-			for (int j = 0; j < elimination_factor.getFactor_values()[0].length; j++) {
-				System.out.print(elimination_factor.getFactor_values()[i][j]+ " , ");
-			}
-			System.out.println();
-		}
 		return elimination_factor;
 	}
 	/**
 	@input: Factor and HashMap.
 	@description: A function that builds the values column (for every row).
 	@output: value for each row.
-	**/
+	 **/
 	public double elimination(Factors.Factor fac, HashMap<String, String> search) {
 		HashMap<String, String> search_fac = new HashMap<>();
 		double ans = 0;
@@ -480,9 +483,8 @@ public class VariableElimination{
 	@input: Factors.
 	@description: A function that do the last join (without send the Factor to elimination).
 	@output: Factor.
-	**/
+	 **/
 	public Factors.Factor last_join(Factors factor) {
-		factor.printFactors();
 
 		String name = factor.getFactors().get(0).getName();
 		int rows = factor.getFactors().get(0).getFactor_values().length;
@@ -494,6 +496,13 @@ public class VariableElimination{
 			new_factor.getFactor_values()[i][1] = "1.0";
 
 		}
+		Vector<Factors.Factor> one_col_factor = new Vector<Factors.Factor>();
+		for (int i = 0; i < factor.getFactors().size(); i++) {
+			if(factor.getFactors().get(i).getFactor_values()[0].length == 1)
+				one_col_factor.add(factor.getFactors().get(i));
+		}
+		factor.getFactors().removeAll(one_col_factor);
+
 		for (int i = 0; i < factor.getFactors().size(); i++) {
 			for (int j = 1; j < new_factor.getFactor_values().length; j++) {
 				mul++;
@@ -508,12 +517,11 @@ public class VariableElimination{
 	@input: Factor.
 	@description: A function that do the normalization and calculate the answer.
 	@output: double.
-	**/
+	 **/
 	public double normalization(Factors.Factor factor) {
 		double answer1 = 0, answer2 = 0, ans = 0;
 
 		String tag = query_node.getTag();
-
 		for (int i = 1; i < factor.getFactor_values().length; i++) {
 			answer2 += Double.valueOf(factor.getFactor_values()[i][1]);
 
@@ -523,12 +531,9 @@ public class VariableElimination{
 			}
 		}
 		sum--;
-		System.out.println("moane: "+answer1);
 
-		System.out.println("mehane: "+answer2);
 		ans = (answer1/answer2);
 		DecimalFormat df = new DecimalFormat("#0.#####");
-		System.out.println("anserr: "+ans);
 		return Double.valueOf(df.format(ans));
 
 	}

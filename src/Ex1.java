@@ -3,7 +3,7 @@ public class Ex1 {
 
 	public static void main(String[] args) throws Exception {
 
-		StringBuilder lines = Parser.readLines("input2.txt");
+		StringBuilder lines = Parser.readLines("input.txt");
 
 		String [] two = lines.toString().split("Queries\n");
 		Nodes nodes = new Nodes(two[0]);

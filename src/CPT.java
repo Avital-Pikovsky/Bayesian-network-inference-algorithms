@@ -107,7 +107,6 @@ public class CPT {
 			block++;
 		}
 	}
-	//TODO - delete this before sent
 		public void printCPT() {
 		System.out.println();
 		System.out.println(CPTnode);
